@@ -5,7 +5,7 @@ version.workspace = true
 edition.workspace = true
 description = "Esprit model registry, download, and lifecycle management"
 license = "MIT"
-repository = "https://github.com/krtvysinghh/Esprit"
+repository = "https://github.com/krtvyasingh/Esprit"
 
 [dependencies]
 anyhow.workspace    = true

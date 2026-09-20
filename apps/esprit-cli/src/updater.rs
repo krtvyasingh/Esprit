@@ -8,8 +8,8 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crate::ui;
 
-const GITHUB_REPO: &str = "krtvysinghh/Esprit";
-const API_URL: &str = "https://api.github.com/repos/krtvysinghh/Esprit/commits/main";
+const GITHUB_REPO: &str = "krtvyasingh/Esprit";
+const API_URL: &str = "https://api.github.com/repos/krtvyasingh/Esprit/commits/main";
 const CACHE_TTL_SECS: u64 = 3600; // 1 hour
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,7 +83,7 @@ pub fn find_or_clone_repo() -> Result<PathBuf> {
                     "clone",
                     "--depth",
                     "1",
-                    "https://github.com/krtvysinghh/Esprit.git",
+                    "https://github.com/krtvyasingh/Esprit.git",
                     target.to_str().unwrap(),
                 ])
                 .output();

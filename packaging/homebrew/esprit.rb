@@ -1,28 +1,28 @@
 class Esprit < Formula
   desc "AI workspace and operating layer — fully offline, no Ollama required"
-  homepage "https://github.com/krtvysinghh/Esprit"
+  homepage "https://github.com/krtvyasingh/Esprit"
   version "0.1.0"
   license "MIT"
 
   # Bottles are pre-compiled by CI — no Rust, CMake, or C++ needed.
   on_macos do
     on_arm do
-      url "https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/krtvyasingh/Esprit/releases/download/v0.1.0/esprit-aarch64-apple-darwin.tar.gz"
       sha256 "PLACEHOLDER_AARCH64_MACOS"
     end
     on_intel do
-      url "https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/krtvyasingh/Esprit/releases/download/v0.1.0/esprit-x86_64-apple-darwin.tar.gz"
       sha256 "PLACEHOLDER_X86_64_MACOS"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-aarch64-unknown-linux-musl.tar.gz"
+      url "https://github.com/krtvyasingh/Esprit/releases/download/v0.1.0/esprit-aarch64-unknown-linux-musl.tar.gz"
       sha256 "PLACEHOLDER_AARCH64_LINUX"
     end
     on_intel do
-      url "https://github.com/krtvysinghh/Esprit/releases/download/v0.1.0/esprit-x86_64-unknown-linux-musl.tar.gz"
+      url "https://github.com/krtvyasingh/Esprit/releases/download/v0.1.0/esprit-x86_64-unknown-linux-musl.tar.gz"
       sha256 "PLACEHOLDER_X86_64_LINUX"
     end
   end

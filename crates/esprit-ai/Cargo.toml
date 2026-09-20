@@ -5,7 +5,7 @@ version.workspace = true
 edition.workspace = true
 description = "Esprit local AI inference (llama.cpp backend — no Ollama required)"
 license = "MIT"
-repository = "https://github.com/krtvysinghh/Esprit"
+repository = "https://github.com/krtvyasingh/Esprit"
 
 [dependencies]
 anyhow.workspace      = true

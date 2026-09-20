@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 # Esprit one-line installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/krtvysinghh/Esprit/main/scripts/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/krtvyasingh/Esprit/main/scripts/install.sh | sh
 set -eu
 
-REPO="krtvysinghh/Esprit"
+REPO="krtvyasingh/Esprit"
 VERSION="${ESPRIT_VERSION:-latest}"
 BIN_DIR="${ESPRIT_INSTALL_DIR:-/usr/local/bin}"
 

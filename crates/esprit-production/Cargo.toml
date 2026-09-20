@@ -4,9 +4,9 @@ version.workspace=true
 edition.workspace=true
 description = "Esprit AI workspace component"
 license = "MIT"
-repository = "https://github.com/krtvysinghh/Esprit"
-homepage = "https://github.com/krtvysinghh/Esprit"
-documentation = "https://github.com/krtvysinghh/Esprit"
+repository = "https://github.com/krtvyasingh/Esprit"
+homepage = "https://github.com/krtvyasingh/Esprit"
+documentation = "https://github.com/krtvyasingh/Esprit"
 readme = "README.md"
 
 [dependencies]
