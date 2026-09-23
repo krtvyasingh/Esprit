@@ -42,8 +42,9 @@ pub fn generate_hypothetical_document(question: &str) -> Result<String> {
 /// Ask a question against the indexed project using HyDE query expansion.
 pub fn ask_with_hyde(question: &str) -> Result<(String, esprit_ai::AiMeta)> {
     // 1. Synthesize hypothetical document
-    let hypothetical_doc = generate_hypothetical_document(question).unwrap_or_else(|_| question.to_string());
-    
+    let hypothetical_doc =
+        generate_hypothetical_document(question).unwrap_or_else(|_| question.to_string());
+
     // 2. Embed both question and hypothetical doc
     let q_vec = embed(question).ok().flatten();
     let hypo_vec = embed(&hypothetical_doc).ok().flatten();

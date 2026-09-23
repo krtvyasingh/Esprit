@@ -62,16 +62,56 @@ impl Default for SecretScanner {
 impl SecretScanner {
     pub fn new() -> Self {
         let rules: Vec<(&'static str, &'static str, &'static str)> = vec![
-            ("AWS Access Key ID", "CRITICAL", r"(?i)\b(AKIA[0-9A-Z]{16})\b"),
-            ("AWS Secret Access Key", "CRITICAL", r#"(?i)aws_secret_access_key\s*=\s*['"][A-Za-z0-9/+=]{40}['"]"#),
-            ("GitHub Personal Access Token", "HIGH", r"\b(gh[pousr]_[A-Za-z0-9_]{20,255})\b"),
-            ("Slack Bot/User Token", "HIGH", r"\bxox[baprs]-[0-9]{10,13}-[0-9]{10,13}[a-zA-Z0-9-]*\b"),
-            ("OpenAI / Anthropic API Key", "CRITICAL", r"\b(sk-[a-zA-Z0-9]{20,64}|sk-ant-[a-zA-Z0-9-_]{20,80})\b"),
-            ("Google Cloud / Gemini API Key", "CRITICAL", r"\b(AIza[0-9A-Za-z-_]{35})\b"),
-            ("Stripe Secret API Key", "HIGH", r"\b(sk_live_[0-9a-zA-Z]{24})\b"),
-            ("Private RSA/SSH Key", "CRITICAL", r"-----BEGIN (RSA|EC|OPENSSH|DSA|PRIVATE) KEY-----"),
-            ("Database Connection String with Password", "HIGH", r#"(postgres|mysql|mongodb|redis)://[^:]+:([^@]+)@"#),
-            ("Generic High Entropy API Key Assignment", "MEDIUM", r#"(?i)(api[_-]?key|secret|password|bearer|auth[_-]?token)\s*[:=]\s*['"]([A-Za-z0-9_/\-+=]{24,})['"]"#),
+            (
+                "AWS Access Key ID",
+                "CRITICAL",
+                r"(?i)\b(AKIA[0-9A-Z]{16})\b",
+            ),
+            (
+                "AWS Secret Access Key",
+                "CRITICAL",
+                r#"(?i)aws_secret_access_key\s*=\s*['"][A-Za-z0-9/+=]{40}['"]"#,
+            ),
+            (
+                "GitHub Personal Access Token",
+                "HIGH",
+                r"\b(gh[pousr]_[A-Za-z0-9_]{20,255})\b",
+            ),
+            (
+                "Slack Bot/User Token",
+                "HIGH",
+                r"\bxox[baprs]-[0-9]{10,13}-[0-9]{10,13}[a-zA-Z0-9-]*\b",
+            ),
+            (
+                "OpenAI / Anthropic API Key",
+                "CRITICAL",
+                r"\b(sk-[a-zA-Z0-9]{20,64}|sk-ant-[a-zA-Z0-9-_]{20,80})\b",
+            ),
+            (
+                "Google Cloud / Gemini API Key",
+                "CRITICAL",
+                r"\b(AIza[0-9A-Za-z-_]{35})\b",
+            ),
+            (
+                "Stripe Secret API Key",
+                "HIGH",
+                r"\b(sk_live_[0-9a-zA-Z]{24})\b",
+            ),
+            (
+                "Private RSA/SSH Key",
+                "CRITICAL",
+                r"-----BEGIN (RSA|EC|OPENSSH|DSA|PRIVATE) KEY-----",
+            ),
+            (
+                "Database Connection String with Password",
+                "HIGH",
+                r#"(postgres|mysql|mongodb|redis)://[^:]+:([^@]+)@"#,
+            ),
+            (
+                "Generic High Entropy API Key Assignment",
+                "MEDIUM",
+                r#"(?i)(api[_-]?key|secret|password|bearer|auth[_-]?token)\s*[:=]\s*['"]([A-Za-z0-9_/\-+=]{24,})['"]"#,
+            ),
         ];
 
         let mut compiled = Vec::new();
@@ -92,7 +132,11 @@ impl SecretScanner {
             let trimmed = line.trim();
 
             // Skip comments that look like example code or tests
-            if trimmed.starts_with("//") && (trimmed.contains("example") || trimmed.contains("dummy") || trimmed.contains("test")) {
+            if trimmed.starts_with("//")
+                && (trimmed.contains("example")
+                    || trimmed.contains("dummy")
+                    || trimmed.contains("test"))
+            {
                 continue;
             }
 
@@ -103,7 +147,11 @@ impl SecretScanner {
 
                     // Redact middle of secret for preview safety
                     let preview = if secret_match.len() > 8 {
-                        format!("{}...{}", &secret_match[..4], &secret_match[secret_match.len() - 3..])
+                        format!(
+                            "{}...{}",
+                            &secret_match[..4],
+                            &secret_match[secret_match.len() - 3..]
+                        )
                     } else {
                         "***".to_string()
                     };
@@ -178,7 +226,9 @@ pub struct MerkleAuditLog {
 
 impl MerkleAuditLog {
     pub fn new() -> Self {
-        Self { entries: Vec::new() }
+        Self {
+            entries: Vec::new(),
+        }
     }
 
     pub fn append(&mut self, actor: &str, action: &str, payload: &[u8]) -> AuditEntry {
@@ -191,7 +241,15 @@ impl MerkleAuditLog {
             "0000000000000000000000000000000000000000000000000000000000000000".to_string()
         };
 
-        let block_content = format!("{}:{}:{}:{}:{}:{}", index, timestamp.to_rfc3339(), actor, action, payload_hash, previous_hash);
+        let block_content = format!(
+            "{}:{}:{}:{}:{}:{}",
+            index,
+            timestamp.to_rfc3339(),
+            actor,
+            action,
+            payload_hash,
+            previous_hash
+        );
         let block_hash = checksum(block_content.as_bytes());
 
         let entry = AuditEntry {
@@ -221,7 +279,15 @@ impl MerkleAuditLog {
                 return false;
             }
 
-            let block_content = format!("{}:{}:{}:{}:{}:{}", entry.index, entry.timestamp.to_rfc3339(), entry.actor, entry.action, entry.payload_hash, entry.previous_hash);
+            let block_content = format!(
+                "{}:{}:{}:{}:{}:{}",
+                entry.index,
+                entry.timestamp.to_rfc3339(),
+                entry.actor,
+                entry.action,
+                entry.payload_hash,
+                entry.previous_hash
+            );
             let expected_hash = checksum(block_content.as_bytes());
             if entry.block_hash != expected_hash {
                 return false;
@@ -237,7 +303,9 @@ pub struct AirGapGuard;
 impl AirGapGuard {
     /// Return whether offline mode is currently enforced or demanded
     pub fn is_air_gapped_environment() -> bool {
-        std::env::var("ESPRIT_OFFLINE").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false)
+        std::env::var("ESPRIT_OFFLINE")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false)
     }
 
     /// Validate an operation against air-gap policies

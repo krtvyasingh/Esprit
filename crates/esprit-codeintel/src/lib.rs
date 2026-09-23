@@ -59,10 +59,16 @@ pub struct DeadCodeFinding {
 pub fn index(root: impl AsRef<Path>) -> Result<Vec<Symbol>> {
     let mut out = Vec::new();
 
-    let rust_re = Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?(fn|struct|enum|trait|type)\s+([A-Za-z0-9_]+)")?;
-    let ts_re = Regex::new(r"(?m)^\s*(?:export\s+)?(function|class|interface|type|enum)\s+([A-Za-z0-9_]+)")?;
+    let rust_re = Regex::new(
+        r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?(fn|struct|enum|trait|type)\s+([A-Za-z0-9_]+)",
+    )?;
+    let ts_re = Regex::new(
+        r"(?m)^\s*(?:export\s+)?(function|class|interface|type|enum)\s+([A-Za-z0-9_]+)",
+    )?;
     let py_re = Regex::new(r"(?m)^\s*(def|class)\s+([A-Za-z0-9_]+)")?;
-    let go_re = Regex::new(r"(?m)^\s*func\s+(?:\([^)]+\)\s+)?([A-Za-z0-9_]+)|^\s*type\s+([A-Za-z0-9_]+)\s+(?:struct|interface)")?;
+    let go_re = Regex::new(
+        r"(?m)^\s*func\s+(?:\([^)]+\)\s+)?([A-Za-z0-9_]+)|^\s*type\s+([A-Za-z0-9_]+)\s+(?:struct|interface)",
+    )?;
 
     for entry in WalkDir::new(root).into_iter().filter_entry(|e| {
         let name = e.file_name().to_string_lossy();
@@ -93,8 +99,17 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<Symbol>> {
             if let Ok(text) = fs::read_to_string(path) {
                 for (idx, line) in text.lines().enumerate() {
                     if let Some(caps) = re.captures(line) {
-                        let kind = caps.get(1).map(|m| m.as_str()).unwrap_or("symbol").to_string();
-                        let name = caps.get(2).map(|m| m.as_str()).or_else(|| caps.get(1).map(|m| m.as_str())).unwrap_or("").to_string();
+                        let kind = caps
+                            .get(1)
+                            .map(|m| m.as_str())
+                            .unwrap_or("symbol")
+                            .to_string();
+                        let name = caps
+                            .get(2)
+                            .map(|m| m.as_str())
+                            .or_else(|| caps.get(1).map(|m| m.as_str()))
+                            .unwrap_or("")
+                            .to_string();
 
                         if !name.is_empty() {
                             out.push(Symbol {
@@ -115,7 +130,10 @@ pub fn index(root: impl AsRef<Path>) -> Result<Vec<Symbol>> {
 }
 
 /// Calculate the cross-file blast radius and impact surface of modifying a symbol or file
-pub fn calculate_blast_radius(root: impl AsRef<Path>, target_query: &str) -> Result<BlastRadiusReport> {
+pub fn calculate_blast_radius(
+    root: impl AsRef<Path>,
+    target_query: &str,
+) -> Result<BlastRadiusReport> {
     let mut file_contents: HashMap<String, String> = HashMap::new();
     let mut all_files = Vec::new();
 
@@ -135,13 +153,17 @@ pub fn calculate_blast_radius(root: impl AsRef<Path>, target_query: &str) -> Res
         }
     }
 
-    let is_file = target_query.contains('.') || target_query.contains('/') || target_query.contains('\\');
+    let is_file =
+        target_query.contains('.') || target_query.contains('/') || target_query.contains('\\');
     let mut direct_dependents = HashSet::new();
     let mut impacted_test_files = HashSet::new();
     let mut total_references = 0;
 
     let search_term = if is_file {
-        Path::new(target_query).file_stem().and_then(|s| s.to_str()).unwrap_or(target_query)
+        Path::new(target_query)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(target_query)
     } else {
         target_query
     };
@@ -159,7 +181,11 @@ pub fn calculate_blast_radius(root: impl AsRef<Path>, target_query: &str) -> Res
             direct_dependents.insert(file_path.clone());
 
             let lower = file_path.to_lowercase();
-            if lower.contains("test") || lower.contains("spec") || lower.ends_with("_test.rs") || lower.ends_with(".test.ts") {
+            if lower.contains("test")
+                || lower.contains("spec")
+                || lower.ends_with("_test.rs")
+                || lower.ends_with(".test.ts")
+            {
                 impacted_test_files.insert(file_path.clone());
             }
         }
@@ -178,12 +204,18 @@ pub fn calculate_blast_radius(root: impl AsRef<Path>, target_query: &str) -> Res
 
     let mut recommended_actions = Vec::new();
     if !impacted_test_files.is_empty() {
-        recommended_actions.push(format!("Run {} targeted test suites covering dependent modules.", impacted_test_files.len()));
+        recommended_actions.push(format!(
+            "Run {} targeted test suites covering dependent modules.",
+            impacted_test_files.len()
+        ));
     } else {
         recommended_actions.push("No dedicated test files detected referencing this target — recommend adding regression tests.".to_string());
     }
     if risk_level == "CRITICAL" || risk_level == "HIGH" {
-        recommended_actions.push("Perform AST semantic diff review to avoid breaking transitive downstream consumers.".to_string());
+        recommended_actions.push(
+            "Perform AST semantic diff review to avoid breaking transitive downstream consumers."
+                .to_string(),
+        );
     }
 
     let mut direct_deps_vec: Vec<String> = direct_dependents.into_iter().collect();
@@ -221,7 +253,11 @@ pub fn analyze_complexity(file_path: impl AsRef<Path>) -> Result<ComplexityRepor
         let line_num = idx + 1;
         let trimmed = line.trim();
 
-        if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with('#') || trimmed.starts_with('*') {
+        if trimmed.is_empty()
+            || trimmed.starts_with("//")
+            || trimmed.starts_with('#')
+            || trimmed.starts_with('*')
+        {
             continue;
         }
 
@@ -237,7 +273,10 @@ pub fn analyze_complexity(file_path: impl AsRef<Path>) -> Result<ComplexityRepor
             if indent_level >= 4 || branch_count >= 3 {
                 hotspots.push(ComplexityHotspot {
                     line: line_num,
-                    reason: format!("Deep nesting level ({}) and multiple conditional branches ({}x)", indent_level, branch_count),
+                    reason: format!(
+                        "Deep nesting level ({}) and multiple conditional branches ({}x)",
+                        indent_level, branch_count
+                    ),
                     preview: trimmed.to_string(),
                 });
             }
@@ -289,7 +328,12 @@ pub fn find_dead_code(root: impl AsRef<Path>) -> Result<Vec<DeadCodeFinding>> {
     let mut findings = Vec::new();
     for sym in symbols {
         // Skip common trait/interface methods and standard entry points
-        if sym.name == "main" || sym.name == "default" || sym.name == "new" || sym.name == "fmt" || sym.name == "run" {
+        if sym.name == "main"
+            || sym.name == "default"
+            || sym.name == "new"
+            || sym.name == "fmt"
+            || sym.name == "run"
+        {
             continue;
         }
 
@@ -317,7 +361,10 @@ pub fn find_dead_code(root: impl AsRef<Path>) -> Result<Vec<DeadCodeFinding>> {
                 kind: sym.kind.clone(),
                 file: sym.file.clone(),
                 line: sym.line,
-                suggestion: format!("Symbol `{}` has 0 external references. Consider pruning or making private.", sym.name),
+                suggestion: format!(
+                    "Symbol `{}` has 0 external references. Consider pruning or making private.",
+                    sym.name
+                ),
             });
         }
     }
