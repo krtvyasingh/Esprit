@@ -2,7 +2,7 @@
 name = "esprit-rag"
 version.workspace = true
 edition.workspace = true
-description = "Esprit AI workspace component"
+description = "Esprit AI workspace component - Hybrid RAG, HyDE & Knowledge Retrieval"
 license = "MIT"
 repository = "https://github.com/krtvyasingh/Esprit"
 homepage = "https://github.com/krtvyasingh/Esprit"
@@ -11,11 +11,12 @@ readme = "README.md"
 
 [dependencies]
 anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
 esprit-index = { version = "0.1.0", path = "../esprit-index" }
 esprit-ai = { version = "0.1.0", path = "../esprit-ai" }
-
 esprit-embeddings = { version = "0.1.0", path = "../esprit-embeddings" }
-
 esprit-memory  = { version = "0.1.0", path = "../esprit-memory" }
 esprit-vectors = { version = "0.1.0", path = "../esprit-vectors" }
 esprit-utils   = { version = "0.1.0", path = "../esprit-utils" }
