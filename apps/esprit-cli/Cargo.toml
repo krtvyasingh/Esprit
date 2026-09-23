@@ -34,6 +34,8 @@ esprit-workflows  = { version = "0.1.0", path = "../../crates/esprit-workflows" 
 esprit-memory     = { version = "0.1.0", path = "../../crates/esprit-memory" }
 esprit-telemetry  = { version = "0.1.0", path = "../../crates/esprit-telemetry" }
 esprit-models     = { version = "0.1.0", path = "../../crates/esprit-models" }
+esprit-codeintel  = { version = "0.1.0", path = "../../crates/esprit-codeintel" }
+esprit-security   = { version = "0.1.0", path = "../../crates/esprit-security" }
 ratatui = "0.30.2"
 crossterm = "0.29.0"
 rusqlite = { workspace = true, features = ["bundled"] }
@@ -45,4 +47,4 @@ serde.workspace = true
 serde_json.workspace = true
 chrono = { workspace = true, features = ["serde"] }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
-
+walkdir.workspace = true

@@ -1,4 +1,8 @@
+pub mod agents_swarm;
+pub mod collab;
 pub mod daemon;
+pub mod devops;
+pub mod lsp;
 pub mod ui;
 pub mod updater;
 
@@ -236,6 +240,96 @@ enum Commands {
     Model {
         #[command(subcommand)]
         action: ModelAction,
+    },
+
+    /// Native Language Server Protocol (LSP) server over stdio for VS Code/Zed/Neovim
+    Lsp,
+
+    /// Calculate cross-file AST blast radius and downstream dependency impact
+    BlastRadius {
+        /// Function, struct, or file target to inspect
+        target: String,
+    },
+
+    /// Analyze Cognitive and Cyclomatic complexity hotspots
+    Complexity {
+        /// Path to analyze (defaults to current directory)
+        path: Option<String>,
+    },
+
+    /// Identify dead, orphaned, or unreferenced functions and structs
+    DeadCode {
+        /// Root path to analyze (defaults to current directory)
+        path: Option<String>,
+    },
+
+    /// Scan codebase for high-entropy secrets and credential leaks
+    ScanSecrets {
+        /// Directory path to scan (defaults to current directory)
+        path: Option<String>,
+    },
+
+    /// Autonomous Test-Driven Development (TDD) loop agent
+    Tdd {
+        /// Feature goal or requirement specification
+        goal: String,
+    },
+
+    /// AppSec Red-Team vulnerability auditor agent
+    RedTeam {
+        /// Target path to audit (defaults to current directory)
+        path: Option<String>,
+    },
+
+    /// Production incident and runtime error triager
+    Triager {
+        /// Error snippet, stack trace, or compiler log
+        error_snippet: String,
+    },
+
+    /// Hypothetical Document Embeddings (HyDE) contextual search
+    Hyde {
+        /// Search query
+        query: String,
+    },
+
+    /// Export vector brain knowledge base to portable JSON package
+    BrainExport {
+        /// Output file path (defaults to .esprit/brain.json)
+        output: Option<String>,
+    },
+
+    /// Generate production CI/CD matrix GitHub Actions workflow
+    CiGen {
+        /// Primary language: rust | node | go | python
+        lang: Option<String>,
+    },
+
+    /// Generate multi-stage distroless Dockerfile
+    DockerGen {
+        /// Binary application name
+        app_name: Option<String>,
+    },
+
+    /// Estimate cloud infrastructure costs for compute & memory workload
+    CostEstimate {
+        /// Service profile name
+        service: Option<String>,
+        /// Memory in GB
+        #[arg(long, default_value = "4")]
+        memory_gb: u32,
+        /// vCPU cores
+        #[arg(long, default_value = "2")]
+        cpu_cores: u32,
+    },
+
+    /// Generate comprehensive ONBOARDING.md team developer guide
+    Onboarding,
+
+    /// Audit and enforce production code conventions & safety
+    StyleEnforce {
+        /// Directory path to scan
+        path: Option<String>,
     },
 }
 
@@ -1488,6 +1582,320 @@ Code:
                 ok(&format!("Removed {}.", entry.display));
             }
         },
+
+        // ── lsp ──────────────────────────────────────────────────────────────
+        Commands::Lsp => {
+            lsp::run_lsp_server()?;
+        }
+
+        // ── blast-radius ─────────────────────────────────────────────────────
+        Commands::BlastRadius { target } => {
+            let sp = spinner(&format!(
+                "Calculating AST blast radius for `{}`…",
+                target.bold()
+            ));
+            let report = esprit_codeintel::calculate_blast_radius(".", &target)?;
+            sp.finish_and_clear();
+
+            ui::panel_header("AST Blast Radius Analysis", Some(&target));
+            let risk_color = match report.risk_level.as_str() {
+                "CRITICAL" => report.risk_level.red().bold().to_string(),
+                "HIGH" => report.risk_level.yellow().bold().to_string(),
+                "MEDIUM" => report.risk_level.cyan().bold().to_string(),
+                _ => report.risk_level.green().bold().to_string(),
+            };
+
+            let mut card_lines = vec![
+                format!("Risk Assessment:       {}", risk_color),
+                format!(
+                    "Direct Dependents:     {} files",
+                    report.total_impacted_files
+                ),
+                format!(
+                    "Total Call References: {} occurrences",
+                    report.total_references
+                ),
+            ];
+            if !report.impacted_test_files.is_empty() {
+                card_lines.push(format!(
+                    "Impacted Test Suites:  {} test files",
+                    report.impacted_test_files.len()
+                ));
+            }
+            ui::card("IMPACT SURFACE SUMMARY", &card_lines);
+
+            if !report.direct_dependents.is_empty() {
+                println!();
+                ui::section("Dependent Files");
+                for dep in report.direct_dependents.iter().take(10) {
+                    println!("  {} {}", "•".cyan(), dep);
+                }
+                if report.direct_dependents.len() > 10 {
+                    println!(
+                        "  {} … and {} more files",
+                        "•".dimmed(),
+                        report.direct_dependents.len() - 10
+                    );
+                }
+            }
+
+            if !report.recommended_actions.is_empty() {
+                println!();
+                ui::section("Recommended Next Steps");
+                for act in &report.recommended_actions {
+                    println!("  {} {}", "✓".green(), act);
+                }
+            }
+            println!();
+        }
+
+        // ── complexity ───────────────────────────────────────────────────────
+        Commands::Complexity { path } => {
+            let target = path.unwrap_or_else(|| "crates/esprit-core/src/lib.rs".to_string());
+            let sp = spinner(&format!("Analyzing complexity hotspots for `{}`…", target));
+            match esprit_codeintel::analyze_complexity(&target) {
+                Ok(rep) => {
+                    sp.finish_and_clear();
+                    ui::panel_header("Cognitive & Cyclomatic Complexity", Some(&target));
+                    ui::card(
+                        "COMPLEXITY METRICS",
+                        &[
+                            format!("Cognitive Score:       {}", rep.cognitive_score),
+                            format!("Cyclomatic Score:      {}", rep.cyclomatic_score),
+                            format!("Lines of Code:         {}", rep.lines_of_code),
+                            format!("Rating:                {}", rep.rating.cyan().bold()),
+                        ],
+                    );
+                    if !rep.hotspots.is_empty() {
+                        println!();
+                        ui::section("Complexity Hotspots");
+                        for h in rep.hotspots.iter().take(5) {
+                            println!("  {} Line {}: {}", "⚠".yellow(), h.line, h.reason);
+                            println!("    {}", h.preview.dimmed());
+                        }
+                    }
+                    println!();
+                }
+                Err(_) => {
+                    sp.finish_and_clear();
+                    ui::fail(&format!("Could not analyze complexity for `{}`", target));
+                }
+            }
+        }
+
+        // ── dead-code ────────────────────────────────────────────────────────
+        Commands::DeadCode { path } => {
+            let target = path.unwrap_or_else(|| ".".to_string());
+            let sp = spinner(&format!(
+                "Scanning for orphaned & dead symbols in `{}`…",
+                target
+            ));
+            let findings = esprit_codeintel::find_dead_code(&target)?;
+            sp.finish_and_clear();
+
+            ui::panel_header("Dead Code & Orphan Pruning", Some(&target));
+            if findings.is_empty() {
+                ui::ok("No dead or unreferenced symbols detected. Clean codebase!");
+            } else {
+                println!(
+                    "  Found {} potentially unreferenced symbols:\n",
+                    findings.len().to_string().yellow().bold()
+                );
+                for f in findings.iter().take(15) {
+                    println!(
+                        "  {} {} `{}` at `{}:{}`",
+                        "○".dimmed(),
+                        f.kind.cyan(),
+                        f.symbol.bold(),
+                        f.file,
+                        f.line
+                    );
+                }
+                if findings.len() > 15 {
+                    println!("  … and {} more symbols.", findings.len() - 15);
+                }
+            }
+            println!();
+        }
+
+        // ── scan-secrets ─────────────────────────────────────────────────────
+        Commands::ScanSecrets { path } => {
+            let target = path.unwrap_or_else(|| ".".to_string());
+            let sp = spinner(&format!(
+                "Scanning for high-entropy secrets and credentials in `{}`…",
+                target
+            ));
+            let scanner = esprit_security::SecretScanner::new();
+            let findings = scanner.scan_directory(&target)?;
+            sp.finish_and_clear();
+
+            ui::panel_header("Security & Secret Leak Scanner", Some(&target));
+            if findings.is_empty() {
+                ui::ok("Zero leaked API keys, tokens, or credentials found.");
+            } else {
+                ui::warn(&format!(
+                    "Detected {} potential secret leaks:",
+                    findings.len()
+                ));
+                for f in findings.iter().take(10) {
+                    let badge = match f.severity.as_str() {
+                        "CRITICAL" => f.severity.red().bold().to_string(),
+                        "HIGH" => f.severity.yellow().bold().to_string(),
+                        _ => f.severity.cyan().to_string(),
+                    };
+                    println!(
+                        "  [{}] {} in `{}:{}` (Entropy: {:.2}, Preview: {})",
+                        badge,
+                        f.rule_name.bold(),
+                        f.file,
+                        f.line_number,
+                        f.entropy,
+                        f.preview.dimmed()
+                    );
+                }
+            }
+            println!();
+        }
+
+        // ── tdd ──────────────────────────────────────────────────────────────
+        Commands::Tdd { goal } => {
+            ui::panel_header("Autonomous TDD Coder Agent", Some(&goal));
+            let sp = spinner("Synthesizing test cases and verified implementation…");
+            let result = agents_swarm::TddAgent::run_tdd_loop(&goal)?;
+            sp.finish_and_clear();
+            println!("{}\n", result);
+            ui::ok("TDD cycle generated successfully.");
+            println!();
+        }
+
+        // ── redteam ──────────────────────────────────────────────────────────
+        Commands::RedTeam { path } => {
+            let target = path.unwrap_or_else(|| ".".to_string());
+            ui::panel_header("AppSec Red-Team Vulnerability Audit", Some(&target));
+            let sp = spinner("Executing deep security & vulnerability analysis…");
+            let result = agents_swarm::RedTeamAgent::audit_codebase(&target)?;
+            sp.finish_and_clear();
+            println!("{}\n", result);
+            ui::ok("Red-Team security audit complete.");
+            println!();
+        }
+
+        // ── triager ──────────────────────────────────────────────────────────
+        Commands::Triager { error_snippet } => {
+            ui::panel_header("Production Incident & SRE Triager", None);
+            let sp = spinner("Analyzing stack trace and formulating patch diff…");
+            let result = agents_swarm::SreTriager::triage_log(&error_snippet)?;
+            sp.finish_and_clear();
+            println!("{}\n", result);
+            println!();
+        }
+
+        // ── hyde ─────────────────────────────────────────────────────────────
+        Commands::Hyde { query } => {
+            ui::panel_header("HyDE Contextual RAG Search", Some(&query));
+            let sp = spinner("Generating hypothetical answer & executing hybrid vector retrieval…");
+            let (answer, meta) = esprit_rag::ask_with_hyde(&query)?;
+            sp.finish_and_clear();
+            println!("{}\n", answer);
+            ui::ok(&format!(
+                "Answer generated in {:.2}s ({} tokens)",
+                meta.duration_ms as f32 / 1000.0,
+                meta.tokens
+            ));
+            println!();
+        }
+
+        // ── brain-export ─────────────────────────────────────────────────────
+        Commands::BrainExport { output } => {
+            let dest = output.unwrap_or_else(|| ".esprit_brain.json".to_string());
+            let sp = spinner(&format!("Exporting vector knowledge brain to `{}`…", dest));
+            let count = esprit_rag::export_brain_to_file(&dest)?;
+            sp.finish_and_clear();
+            ui::ok(&format!(
+                "Exported knowledge brain package with {} vectors to `{}`.",
+                count, dest
+            ));
+            println!();
+        }
+
+        // ── ci-gen ───────────────────────────────────────────────────────────
+        Commands::CiGen { lang } => {
+            let language = lang.unwrap_or_else(|| "rust".to_string());
+            let sp = spinner(&format!("Scaffolding CI workflow for `{}`…", language));
+            let path = devops::CiGenerator::write_ci_file(&language, ".")?;
+            sp.finish_and_clear();
+            ui::ok(&format!(
+                "Created GitHub Actions matrix workflow at `{}`.",
+                path
+            ));
+            println!();
+        }
+
+        // ── docker-gen ───────────────────────────────────────────────────────
+        Commands::DockerGen { app_name } => {
+            let name = app_name.unwrap_or_else(|| "esprit".to_string());
+            let dockerfile = devops::DockerGenerator::generate_distroless_dockerfile(&name);
+            let file_path = "Dockerfile.distroless";
+            std::fs::write(file_path, &dockerfile)?;
+            ui::ok(&format!(
+                "Generated multi-stage distroless Dockerfile at `{}`.",
+                file_path
+            ));
+            println!();
+        }
+
+        // ── cost-estimate ────────────────────────────────────────────────────
+        Commands::CostEstimate {
+            service,
+            memory_gb,
+            cpu_cores,
+        } => {
+            let svc = service.unwrap_or_else(|| "Production API Container".to_string());
+            let estimate =
+                devops::CostEstimator::estimate_workload_costs(&svc, memory_gb, cpu_cores);
+            ui::panel_header("Cloud Infrastructure Cost Estimator", Some(&svc));
+            println!("{}\n", estimate);
+        }
+
+        // ── onboarding ───────────────────────────────────────────────────────
+        Commands::Onboarding => {
+            let sp = spinner("Analyzing codebase structure and generating ONBOARDING.md…");
+            let path = collab::OnboardingGenerator::generate_onboarding_guide(".")?;
+            sp.finish_and_clear();
+            ui::ok(&format!(
+                "Comprehensive developer onboarding guide generated at `{}`.",
+                path
+            ));
+            println!();
+        }
+
+        // ── style-enforce ────────────────────────────────────────────────────
+        Commands::StyleEnforce { path } => {
+            let target = path.unwrap_or_else(|| ".".to_string());
+            let sp = spinner(&format!(
+                "Auditing code conventions & safety in `{}`…",
+                target
+            ));
+            let violations = collab::StyleEnforcer::enforce_conventions(&target)?;
+            sp.finish_and_clear();
+
+            ui::panel_header("Code Style & Convention Audit", Some(&target));
+            if violations.is_empty() {
+                ui::ok("100% compliant with Esprit production code standards.");
+            } else {
+                ui::warn(&format!(
+                    "Found {} convention advisory warnings:",
+                    violations.len()
+                ));
+                for v in violations.iter().take(15) {
+                    println!("  {} {}", "•".yellow(), v);
+                }
+                if violations.len() > 15 {
+                    println!("  … and {} more advisories.", violations.len() - 15);
+                }
+            }
+            println!();
+        }
     }
 
     Ok(())

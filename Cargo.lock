@@ -1623,6 +1623,7 @@ dependencies = [
  "crossterm",
  "esprit-agents",
  "esprit-ai",
+ "esprit-codeintel",
  "esprit-config",
  "esprit-core",
  "esprit-embeddings",
@@ -1634,6 +1635,7 @@ dependencies = [
  "esprit-plugins",
  "esprit-rag",
  "esprit-search",
+ "esprit-security",
  "esprit-telemetry",
  "esprit-vectors",
  "esprit-workflows",
@@ -1646,6 +1648,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tracing",
+ "walkdir",
 ]
 
 [[package]]
@@ -1832,12 +1835,15 @@ name = "esprit-rag"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "esprit-ai",
  "esprit-embeddings",
  "esprit-index",
  "esprit-memory",
  "esprit-utils",
  "esprit-vectors",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1852,8 +1858,14 @@ dependencies = [
 name = "esprit-security"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "chrono",
  "hex",
+ "regex",
+ "serde",
+ "serde_json",
  "sha2 0.10.9",
+ "walkdir",
 ]
 
 [[package]]
