@@ -32,6 +32,7 @@ members = [
     "crates/esprit-security",
     "crates/esprit-package", "crates/esprit-app",
     "crates/esprit-models",
+    "crates/esprit-cleaner",
 ]
 
 default-members = [

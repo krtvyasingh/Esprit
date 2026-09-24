@@ -1,4 +1,5 @@
 pub mod agents_swarm;
+pub mod cleaner_cmd;
 pub mod collab;
 pub mod daemon;
 pub mod devops;
@@ -331,6 +332,41 @@ enum Commands {
         /// Directory path to scan
         path: Option<String>,
     },
+
+    /// Deep system cleaner, cache sweeper, ghost app remover & malware scanner
+    Clean {
+        /// Scan and display diagnostic report without deleting
+        #[arg(long, short)]
+        scan: bool,
+
+        /// Clean all safe caches, app remnants, and temporary files
+        #[arg(long, short)]
+        all: bool,
+
+        /// Clean developer tool caches (Xcode, Cargo, npm, pip, etc.)
+        #[arg(long, short)]
+        cache: bool,
+
+        /// Clean uninstalled / deleted application leftovers
+        #[arg(long, short)]
+        leftovers: bool,
+
+        /// Quarantine or clean identified temporary threat droppers
+        #[arg(long)]
+        threats: bool,
+
+        /// Perform dry-run without removing files
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Auto-confirm cleanup without interactive confirmation
+        #[arg(long, short)]
+        yes: bool,
+
+        /// Output diagnostic report as JSON
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 // ── Model sub-command ─────────────────────────────────────────────────────────
@@ -432,6 +468,12 @@ fn main() -> Result<()> {
                         "⚖️".yellow(),
                         "esprit debate <topic>".bold(),
                         "Multi-agent architecture debate (Sec vs Perf)".dimmed()
+                    ),
+                    format!(
+                        "{} {:<20} {}",
+                        "🧹".green(),
+                        "esprit clean".bold(),
+                        "Deep system cache, ghost app & malware cleaner".dimmed()
                     ),
                     format!(
                         "{} {:<20} {}",
@@ -1895,6 +1937,29 @@ Code:
                 }
             }
             println!();
+        }
+
+        // ── clean ────────────────────────────────────────────────────────────
+        Commands::Clean {
+            scan,
+            all,
+            cache,
+            leftovers,
+            threats,
+            dry_run,
+            yes,
+            json,
+        } => {
+            cleaner_cmd::run_cleaner(cleaner_cmd::CleanOptions {
+                scan,
+                all,
+                cache,
+                leftovers,
+                threats,
+                dry_run,
+                yes,
+                json,
+            })?;
         }
     }
 

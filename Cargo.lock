@@ -1614,6 +1614,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "esprit-cleaner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "directories",
+ "esprit-security",
+ "esprit-utils",
+ "hex",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sysinfo",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
 name = "esprit-cli"
 version = "0.1.0"
 dependencies = [
@@ -1623,6 +1642,7 @@ dependencies = [
  "crossterm",
  "esprit-agents",
  "esprit-ai",
+ "esprit-cleaner",
  "esprit-codeintel",
  "esprit-config",
  "esprit-core",

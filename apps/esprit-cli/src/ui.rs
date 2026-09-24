@@ -163,6 +163,43 @@ pub fn elapsed(start: Instant) -> String {
     }
 }
 
+pub fn meter_bar(used: u64, total: u64, width: usize) -> String {
+    if total == 0 {
+        return "─".repeat(width);
+    }
+    let ratio = (used as f64 / total as f64).clamp(0.0, 1.0);
+    let filled = (ratio * width as f64).round() as usize;
+    let empty = width.saturating_sub(filled);
+
+    let filled_str = "█".repeat(filled);
+    let empty_str = "░".repeat(empty);
+
+    if ratio > 0.85 {
+        format!("{}{}", filled_str.red().bold(), empty_str.dimmed())
+    } else if ratio > 0.65 {
+        format!("{}{}", filled_str.yellow().bold(), empty_str.dimmed())
+    } else {
+        format!("{}{}", filled_str.cyan().bold(), empty_str.dimmed())
+    }
+}
+
+pub fn alert_box(title: &str, lines: &[String]) {
+    let width: usize = 64;
+    let title_fmt = format!(" 🚨 {} ", title);
+    let rem = width.saturating_sub(title_fmt.len() + 4);
+    println!(
+        "\n  ╭─{}─{}╮",
+        title_fmt.red().bold(),
+        "─".repeat(rem).red()
+    );
+    for line in lines {
+        let clean_len = strip_ansi_escapes(line).len();
+        let pad = width.saturating_sub(clean_len + 4);
+        println!("  │  {} {}│", line, " ".repeat(pad));
+    }
+    println!("  ╰{}╯\n", "─".repeat(width.saturating_sub(2)).red());
+}
+
 fn strip_ansi_escapes(s: &str) -> String {
     let mut out = String::new();
     let mut in_escape = false;
